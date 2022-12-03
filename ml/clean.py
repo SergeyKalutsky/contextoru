@@ -47,8 +47,7 @@ if __name__ == '__main__':
             continue
 
         shared_list = manager.list()
-        r = process_map(partial(parse_sentence, shared_list),
-                        sentences, max_workers=8, chunksize=1)
+        r = process_map(partial(parse_sentence, shared_list), sentences, max_workers=8, chunksize=1)
         with open(f'data/chunck_{i}.pickle', 'wb') as handle:
             pickle.dump(list(shared_list), handle)
 
