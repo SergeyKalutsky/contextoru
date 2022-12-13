@@ -1,7 +1,7 @@
 const elem = document.querySelector('.word')
-const answers = []
+let answers = []
 
-const createGuessElement = (position, word) => {
+const createGuessElement = async (position, word) => {
     let width
     let color
 
@@ -25,7 +25,7 @@ const createGuessElement = (position, word) => {
         color = ' --green'
     }
     const rowWrapper = document.createElement("div");
-    rowWrapper.className = 'row-wrapper'
+    rowWrapper.className = 'row-wrapper current'
     const outerBar = document.createElement("div");
     outerBar.className = 'outer-bar'
     const innerBar = document.createElement("div");
@@ -44,7 +44,31 @@ const createGuessElement = (position, word) => {
     return rowWrapper
 }
 
+const setRowClass = async (answers, word) => {
+    for (let i = 0; i < answers.length; i++) {
+        if (answers[i].word == word) {
+            answers[i].element.className = 'row-wrapper current'
+        } else {
+            answers[i].element.className = 'row-wrapper'
+        }
+    }
+    return answers
+}
+
+const addRowElement = async (guessElement, answers, word, position) => {
+    for (let answer of answers) {
+        if (answer.word === word) {
+            return answers
+        }
+    }
+    answers.push({ position: position, element: guessElement, word: word })
+    answers.sort((a, b) => { return a.position - b.position })
+    return answers
+
+}
+
 elem.addEventListener('keypress', async (event) => {
+    const word = elem.value.toLowerCase()
     if (event.key === 'Enter') {
         await fetch('http://localhost:8000/check_guess',
             {
@@ -53,20 +77,39 @@ elem.addEventListener('keypress', async (event) => {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ word: elem.value })
+                body: JSON.stringify({ word: word })
             }
         )
             .then((response) => response.json())
-            .then((data) => {
+            .then(async (data) => {
+                const attemptsCount = document.querySelector('#count')
+                attemptsCount.textContent = Number(attemptsCount.textContent) + 1
+
+                const helpText = document.querySelector('.how-to-play')
+                if (helpText !== null) {
+                    helpText.remove()
+                }
+
+                const history = document.querySelector('.guess-history')
+                const messageElement = document.querySelector('.message')
                 if (data.error === 'ok') {
-                    const history = document.querySelector('.guess-history')
-                    const guessElement = createGuessElement(data.rating, elem.value)
-                    answers.push({ position: data.rating, element: guessElement })
-                    answers.sort((a, b) => { return a.position - b.position })
+                    const guessElement = await createGuessElement(data.rating, word)
+                    // Change message displayed
+                    messageElement.innerHTML = ''
+                    messageElement.appendChild(guessElement.cloneNode(true))
+                    // Change guess history
+                    answers = await addRowElement(guessElement, answers, word, data.rating)
+                    answers = await setRowClass(answers, word)
                     history.innerHTML = ''
-                    for (let i in answers) {
-                        history.appendChild(answers[i].element)
+                    for (let answer of answers) {
+                        history.appendChild(answer.element)
                     }
+                } else if (data.error === 'word is not found') {
+                    const wordNotFoundMessage = document.createElement("div");
+                    wordNotFoundMessage.className = 'message-text'
+                    wordNotFoundMessage.textContent = 'Извините, к сожалению, я не знаю такое слово'
+                    messageElement.innerHTML = ''
+                    messageElement.appendChild(wordNotFoundMessage)
                 }
                 elem.value = ''
             })
