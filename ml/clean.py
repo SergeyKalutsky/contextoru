@@ -1,4 +1,6 @@
 # pip install pymystem3
+# pip install corus
+# pip install tqdm
 import os
 import pickle
 from corus import load_lenta
