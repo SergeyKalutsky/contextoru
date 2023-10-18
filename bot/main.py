@@ -2,11 +2,11 @@ from telebot import TeleBot
 from model import init, get_placement
 
 init_world, world_dict = init()
-print(len(world_dict))
 similarities = []
 TOKEN = '5725792179:AAHIAlFVHfb5cBfCs6IIvwAwAlyJnQlhlfw'
 bot = TeleBot(TOKEN)
 
+print(len(world_dict))
 print(init_world)
 
 
@@ -27,7 +27,7 @@ def start(message):
 def word(message):
     global similarities
     if len(message.text.split(' ')) > 2:
-        bot.send_message(message.chat.id, '')
+        bot.send_message(message.chat.id, 'Больше одного слова нельзя')
         return
     _, word = message.text.split(' ')
     if word == init_world:

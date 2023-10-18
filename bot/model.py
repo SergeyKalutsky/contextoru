@@ -1,6 +1,5 @@
 from random import choice
 import gensim.downloader as api
-from gensim.models import Word2Vec
 from pymystem3 import Mystem
 
 model = api.load('word2vec-ruscorpora-300')
